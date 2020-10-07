@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@nlpjs/neural": "^4.12.0"
+    "@nlpjs/basic": "^4.13.3",
+    "@nlpjs/neural": "^4.12.0",
+    "node-nlp": "^4.13.3"
   }
 }
