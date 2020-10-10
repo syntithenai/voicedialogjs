@@ -1,7 +1,4 @@
 const { NeuralNetwork } = require('@nlpjs/neural');
-//const { NlpManager } = require('node-nlp');
-//var manager = require('./nlpManager')
-
 
 function DialogManager(config) {
     var history=[]
@@ -10,7 +7,7 @@ function DialogManager(config) {
     // index rules by intent
     var rules = {}
     var utterancesAll = config.utterances
-    //console.log(['cRULE',JSON.stringify(config.rules)])
+    
     if (Array.isArray(config.rules)) {
         config.rules.map(function(rule) {
             if (rule.steps && rule.steps.length > 0 && rule.steps[0].startsWith('intent_')) {
@@ -20,13 +17,14 @@ function DialogManager(config) {
     }
     
     const model = new NeuralNetwork();
-    
+    var manager = null;
     function init() {
         return new Promise(function(resolve,reject) {
             // nlu model TODO merge utterances
-            manager = require('./nlpManager')
-            manager.importOpenNlu(config.nlp).then(function() {
-
+            var getManager = require('./nlpManager')
+            manager = getManager(config.nlp)
+            manager.train().then(function() {
+                //console.log(['MANAGER',JSON.stringify(manager.nlp.ner.rules.en)])
                 // routing model
                 if (config.json && Object.keys(config.json).length > 0) {
                     model = new NeuralNetwork();
@@ -37,11 +35,14 @@ function DialogManager(config) {
                 } else if ((config.stories && Object.keys(config.stories).length > 0) || (config.rules && Object.keys(config.rules).length > 0)) {
                     train(fromStories(config.stories)).then(function() {resolve()})
                 } else  {
-                    //console.log('no training data')
                     reject('no training data')
                 }
             })
-        })
+        })  
+    }
+    
+    function toJSON() {
+        return {nlp: manager.export(), core: model.toJSON()}
     }
     
     // HISTORY FUNCTIONS
@@ -98,18 +99,15 @@ function DialogManager(config) {
             stories.map(function(story) {
                 if (story.steps) {
                     story.steps.map(function(step,i) {
-                         //console.log(['step',story.story,i,step])
                          if (i > 0 && step.startsWith('utter_') || step.startsWith('action_')) {
                              var input = story.steps.slice(0,i)
                              var output = story.steps[i]
-                             //console.log(['IN OUT',input,output])
                              newCorpus.push({input: arrayToWeights(input),output: arrayToWeights([output])})
                          }
                     })
                 }  
             })
         }
-        //console.log(['CORP',JSON.stringify(newCorpus)])
         return newCorpus
     }
     
@@ -141,12 +139,7 @@ function DialogManager(config) {
           now[log] = 1
           return null   
         })
-        //{ when: 1, birthday: 1 }
-        //console.log(['HI',history])
-        //console.log(['NOW',now])
-        
         var results = model.run(now)
-        //console.log(['RES',results])
         if (results && Object.keys(results).length > 0) {
             var resultsArray = Object.keys(results).map(function(option) {
                   return {next:option, score:results[option]}
@@ -177,7 +170,7 @@ function DialogManager(config) {
         var utterances=[]
         console.log(['USER',intentIn])
         var intent = {}
-        
+
         return new Promise(function(resolve,reject) {
             if (typeof intentIn == "string") {
                 if (!manager) throw new Error('Cannot handle string intent without a manager configured')
@@ -196,7 +189,6 @@ function DialogManager(config) {
                     console.log(e)
                 }
                 //console.log(manager.export())
-                //intent.name = 
             } else if (typeof intentIn == "object" && intentIn.name && intentIn.name.trim()) {
                 intent = intentIn
                 runIntent(intent).then(function() {
@@ -328,8 +320,6 @@ function DialogManager(config) {
                 if (intentName && rules[intentName] && rules[intentName].steps && rules[intentName].steps.length > 1) {
                     history.push(intentName)
                     //console.log(['RULE',intentName])
-                    //var i = 1;
-                    //var last = null
                     // loop through action and utter processing steps
                     function runRuleSteps(steps) {
                         
@@ -357,10 +347,7 @@ function DialogManager(config) {
                         //console.log(['done  RUN RULES'])
                         resolve(utterances)
                     })
-                    //while (step !== last && step && (step.startsWith('action_') || step.startsWith('utter_'))) {
-                        
-                        
-                    //}
+                    
                 } else {
                     //console.log('STORY')
                     pushIntent(intent)
@@ -390,18 +377,6 @@ function DialogManager(config) {
                         resolve(utterances)
                     })
                     
-                    
-                    
-                    
-                    //var last = null;
-                    //// while the computer is working through utterances and actions to prepare a response
-                    //while (next !== last && (next.startsWith('action_') || next.startsWith('utter_'))) {
-                        //runStoryStep(next)
-                        
-                        //last = next
-                        //next = predict()
-                        ////console.log(['LOOP ',next,history,slots])
-                    //}
                 }
                // console.log(['DONE ',utterances,history,slots])
             })
@@ -410,6 +385,6 @@ function DialogManager(config) {
     
     
     
-    return {init, pushIntent, pushEntity, pushAction, pushUtterance, resetHistory, train, predict,arrayToWeights, run, fromStories, history, slots, model}
+    return {init, pushIntent, pushEntity, pushAction, pushUtterance, resetHistory, train, predict,arrayToWeights, run, fromStories, history, slots, model, toJSON}
 }
 module.exports = DialogManager

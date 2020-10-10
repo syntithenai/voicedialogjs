@@ -43,9 +43,9 @@ manager.addAfterLastCondition('en', 'toEntity', 'from');
   
 
 
-//manager.train().then(function() {
-//manager
-  //.process('I saw spiderman eating spaghetti today in the city!')
-  //.then(result => console.log(result));
-  console.log(manager.export())
-//})
+manager.train().then(function() {
+manager
+  .process('I saw spiderman eating spaghetti today in the city!')
+  .then(result => console.log(result));
+//  console.log(manager.export())
+})
