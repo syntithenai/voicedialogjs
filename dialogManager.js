@@ -1,6 +1,7 @@
 const { NeuralNetwork } = require('@nlpjs/neural');
 
 function DialogManager(config) {
+    //console.log(['DM CON',config])
     var history=[]
     var slots={}
     var manager = null
@@ -8,47 +9,53 @@ function DialogManager(config) {
     var rules = {}
     var utterancesAll = config.utterances
     
-    if (Array.isArray(config.rules)) {
-        config.rules.map(function(rule) {
-            if (rule.steps && rule.steps.length > 0 && rule.steps[0].startsWith('intent_')) {
-                rules[rule.steps[0]] = rule
-            }
-        })
-    }
-    
+ 
     const model = new NeuralNetwork();
     var manager = null;
-    function init() {
-        return new Promise(function(resolve,reject) {
+    async function init() {
+        if (Array.isArray(config.rules)) {
+        //console.log('addrule is array')
+            config.rules.map(function(rule) {
+                //console.log(['ruule',rule, rule.steps,rule.steps[0],Array.isArray(rule.steps),rule.steps.length > 0,rule.steps[0].indexOf('intent '),rule.steps[0].indexOf('intent ') === 0])
+                if (Array.isArray(rule.steps) && rule.steps.length > 0 && rule.steps[0].indexOf('intent ') === 0) {
+                    rules[rule.steps[0]] = rule
+                    //console.log('addrule')
+                }
+            })
+        }
+        //console.log(['rules',rules,config.rules])
+        //return new Promise(function(resolve,reject) {
             // nlu model TODO merge utterances
-            var getManager = require('./nlpManager')
-            manager = getManager(config.nlp)
-            manager.train().then(function() {
+            var NlpManager = require('./nlpManager')
+            manager = await NlpManager()
+            await manager.train(config.nlp)
+            //.then(function() {
                 //console.log(['MANAGER',JSON.stringify(manager.nlp.ner.rules.en)])
+
                 // routing model
                 if (config.json && Object.keys(config.json).length > 0) {
                     model = new NeuralNetwork();
                     model.fromJSON(config.json);
-                    resolve()
+                    
                 } else if (config.corpus && Object.keys(config.corpus).length > 0) {
-                    train(config.corpus).then(function() {resolve()})
+                    await  train(config.corpus)
                 } else if ((config.stories && Object.keys(config.stories).length > 0) || (config.rules && Object.keys(config.rules).length > 0)) {
-                    train(fromStories(config.stories)).then(function() {resolve()})
+                    await train(fromStories(config.stories))
                 } else  {
-                    reject('no training data')
+                    return 'no training data'
                 }
-            })
-        })  
+            //})
+        //})  
     }
     
     function toJSON() {
-        return {nlp: manager.export(), core: model.toJSON()}
+        return {nlp: manager.toJSON(), core: model.toJSON()}
     }
     
     // HISTORY FUNCTIONS
     function pushIntent(intent) {
         if (intent && intent.name) {
-            history.push('intent_'+intent.name) 
+            history.push('intent '+intent.name) 
             if (Array.isArray(intent.entities)) {
                 intent.entities.map(function(entity) {
                     if (entity.name)  {
@@ -62,20 +69,20 @@ function DialogManager(config) {
     
     function pushEntity(entity) {
         if (entity.name)  {
-            history.push('slot_'+entity.name) //+"_"+entity.value)
+            history.push('slot '+entity.name) //+"_"+entity.value)
             slots[entity.name] = entity.value
         }
     }
     
     function pushUtterance(utterance) {
         if (utterance.name)  {
-            history.push('utter_'+utterance.name)
+            history.push('utter '+utterance.name)
         }
     }
     
     function pushAction(action) {
         if (action.name)  {
-            history.push('action_'+action.name)
+            history.push('action '+action.name)
         }
     }
     
@@ -86,7 +93,7 @@ function DialogManager(config) {
     // training
     function train(corpus) {
         return new Promise(function(resolve,reject) {
-            //console.log(['TRAIN',JSON.stringify(corpus)])
+            console.log(['TRAIN',JSON.stringify(corpus)])
             model.train(corpus);
             resolve()
         })
@@ -97,9 +104,11 @@ function DialogManager(config) {
         var newCorpus = []
         if (Array.isArray(stories) && stories.length > 0) {
             stories.map(function(story) {
+                console.log(['FROM STORY',JSON.stringify(story)])
                 if (story.steps) {
                     story.steps.map(function(step,i) {
-                         if (i > 0 && step.startsWith('utter_') || step.startsWith('action_')) {
+                        console.log(['FROM STORY STEP',JSON.stringify(step)])
+                         if (i > 0 && step.indexOf('utter ') === 0 || step.indexOf('action ') === 0) {
                              var input = story.steps.slice(0,i)
                              var output = story.steps[i]
                              newCorpus.push({input: arrayToWeights(input),output: arrayToWeights([output])})
@@ -108,6 +117,8 @@ function DialogManager(config) {
                 }  
             })
         }
+        console.log(['fromstories',JSON.stringify(newCorpus)])
+        console.log(['fromstories raw',JSON.stringify(stories)])
         return newCorpus
     }
     
@@ -168,17 +179,18 @@ function DialogManager(config) {
     // when we meet an intent, and respond with the text collated from loop action/utterances
     function run(intentIn) {
         var utterances=[]
-        console.log(['USER',intentIn])
+        //console.log(['USER',intentIn])
         var intent = {}
 
         return new Promise(function(resolve,reject) {
             if (typeof intentIn == "string") {
                 if (!manager) throw new Error('Cannot handle string intent without a manager configured')
-                console.log(['STRING INTENT',intentIn])
+                //console.log(['STRING INTENT',intentIn])
                 try {
                     manager.process(intentIn).then(result => {
-                        console.log(result)
+                        //console.log(result)
                         intent.name = result.intent
+                        intent.entities = result.entities
                         runIntent(intent).then(function() {
                             resolve(utterances)
                         })
@@ -200,16 +212,16 @@ function DialogManager(config) {
         
         
         function runRuleStep(step) {
-            //console.log(['run rule step',step])
+            //console.log(['run rule step',step,step.indexOf('action '),step.indexOf('utter ')])
             return new Promise(function(resolve,reject) {
-                if (step.startsWith('action_')) {
+                if (step.indexOf('action ') === 0) {
                     history.push(step)
                     if (config.actions && typeof config.actions[step] === 'function') {
                         config.actions[step](history,slots,config).then(function(utterances,actionSlots) {
                              // action can return slots
                             if (Array.isArray(actionSlots)) {
                                 actionSlots.map(function(slot) { 
-                                    history.push('slot_'+slot.name) 
+                                    history.push('slot '+slot.name) 
                                     slots[slot.name] = slot.value
                                 })
                             }
@@ -235,7 +247,8 @@ function DialogManager(config) {
                     } else {
                          resolve()
                     }
-                } else if (step.startsWith('utter_')) {
+                } else if (step.indexOf('utter ') === 0) {
+                    //console.log(['do utter',step,utterancesAll])
                     if (utterancesAll && utterancesAll[step]) {
                         history.push(step)
                         var templates = utterancesAll[step]
@@ -255,28 +268,28 @@ function DialogManager(config) {
         }
         
         function runStoryStep(next) {
-            //console.log(['run story step',next])
+            console.log(['run story step',next])
             return new Promise(function(resolve,reject) {
-                if (next.startsWith('action_')) {
-                    //console.log(['ACT',next])
+                if (next.indexOf('action ') === 0) {
+                    console.log(['ACT',next])
                     if (config.actions && typeof config.actions[next] === 'function') {
                         history.push(next)
                         config.actions[next](history,slots,config).then(function(utterances,actionSlots) {
                             // action can return slots
                             if (Array.isArray(actionSlots)) {
                                 actionSlots.map(function(slot) { 
-                                    history.push('slot_'+slot.name) 
+                                    history.push('slot '+slot.name) 
                                     slots[slot.name] = slot.value
                                 })
                             }
                             // action can return utterances
                             if (Array.isArray(utterances)) {
                                 utterances.map(function(utterance) { 
-                                    var nextUtterance ='utter_'+utterance
+                                    var nextUtterance ='utter '+utterance
                                     history.push(nextUtterance) 
                                     var templates = utterancesAll[nextUtterance]
                                     var template = Array.isArray(templates) ? templates[Math.floor(Math.random()*templates.length)] : ''
-                                    //console.log(['TMPL',templates,template])
+                                    console.log(['TMPL',templates,template])
                                     Object.keys(slots).map(function(slot) {
                                         template = template.replace(new RegExp('{'+slot+'}', 'g'), slots[slot]);
                                         //template = template.replaceAll('{'+slot+'}',slots[slot])
@@ -292,13 +305,13 @@ function DialogManager(config) {
                          resolve()
                     }
                     
-                } else if (next.startsWith('utter_')) {
-                    //console.log(['UTT',next])
+                } else if (next.indexOf('utter ' === 0)) {
+                    console.log(['UTT',next])
                     if (utterancesAll && utterancesAll[next]) {
                         history.push(next)
                         var templates = utterancesAll[next]
                         var template = Array.isArray(templates) ? templates[Math.floor(Math.random()*templates.length)] : ''
-                        //console.log(['TMPL',templates,template])
+                        console.log(['TMPL',templates,template])
                         Object.keys(slots).map(function(slot) {
                             template = template.replace(new RegExp('{'+slot+'}', 'g'), slots[slot]);
                             //template = template.replaceAll('{'+slot+'}',slots[slot])
@@ -314,12 +327,18 @@ function DialogManager(config) {
         
         function runIntent(intent) {
             return new Promise(function(resolve,reject) {
-                //console.log(['INTENT',intent,'RULES',JSON.stringify(rules)])
-                var intentName = intent && intent.name ? 'intent_' + intent.name : ''
-                //console.log(['INTNAM',intentName])
+                //console.log(['INTENT',intent,'RULES',rules])
+                var intentName = intent && intent.name ? 'intent ' + intent.name : ''
+                //
                 if (intentName && rules[intentName] && rules[intentName].steps && rules[intentName].steps.length > 1) {
+                    console.log(['RUN INTENT',intentName])
                     history.push(intentName)
-                    //console.log(['RULE',intentName])
+                    // set slot values
+                    if (Array.isArray(intent.entities)) intent.entities.map(function(entity) {
+                        history.push('slot '+entity.entity) //+"_"+entity.value)
+                        slots[entity.entity] = entity.option
+                    })
+                    console.log(['slots',intent.entities,slots])
                     // loop through action and utter processing steps
                     function runRuleSteps(steps) {
                         
@@ -328,7 +347,7 @@ function DialogManager(config) {
                                 var step = steps[0]
                                 runRuleStep(step).then(function() {
                                     //console.log(['done  RUN RULEStep'])
-                                    if (step && (step.startsWith('action_') || step.startsWith('utter_'))) {
+                                    if (step && (step.indexOf('action ') === 0 || step.indexOf('utter ' === 0))) {
                                         runRuleSteps(steps.slice(1)).then(function() {iresolve()})
                                     } else {
                                         // invalid step (must be utter or action)
@@ -349,17 +368,25 @@ function DialogManager(config) {
                     })
                     
                 } else {
-                    //console.log('STORY')
+                    console.log(['STORY + ', JSON.stringify(intent)])
                     pushIntent(intent)
+                    // set slot values
+                    if (Array.isArray(intent.entities)) intent.entities.map(function(entity) {
+                        history.push('slot '+entity.entity) //+"_"+entity.value)
+                        slots[entity.entity] = entity.option
+                    })
+                    console.log(['slots',intent.entities,slots])
                     var last = null
                     function runStorySteps() {
                         return new Promise(function(iresolve,ireject) {
                             var next = predict()
-                            if (next && next !== last && (next.startsWith('action_') || next.startsWith('utter_'))) {
+                            console.log(['STORY predict',next,history])
+                            if (next && next !== last && (next.indexOf('action ') === 0 || next.indexOf('utter ') === 0)) {
                                 last = next
+                                console.log(['STORY predict action or utter',next])
                                 runStoryStep(next).then(function() {
                                     next = predict()
-                                    if (next && (next.startsWith('action_') || next.startsWith('utter_'))) {
+                                    if (next && (next.indexOf('action ') === 0 || next.indexOf('utter ') === 0)) {
                                         runStorySteps().then(function() {iresolve()})
                                     } else {
                                         // invalid step (must be utter or action)

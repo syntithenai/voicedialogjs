@@ -1,3 +1,13 @@
+<html>
+<head>
+  <title>Test</title>
+  <script src='./bundle.js'></script>
+  <script>
+  const DialogManager = window.voicedialogjs;
+  
+  
+    //(async () => {
+
 var config = {
     // domain
     //slots: {
@@ -210,7 +220,6 @@ var config = {
         'utter next track': ['Playing the next track'],
         'utter previous track': ['Playing the previous track'],
         'utter playback started': ['Start playing'],
-        'utter ask rating': ['What is your rating for this track'],
         'utter playback started artist': ['Found music by {artist}'],
         'utter playback started genre': ['Found music in the genre {genre}'],
         'utter have_fun': ['Have a blast','Have fun','Enjoy yourself']
@@ -231,31 +240,10 @@ var config = {
             rule:'stop playing',
             steps:['intent stop playing', 'utter stop playing']
         },
-        {
-            rule:'rate track',
-            steps:['intent rate track', 'form rate track']
-        },
         //{
             //rule:'play music',
             //steps:['intent play music','utter playback started']
         //}
-    ],
-    forms: [
-        {
-          form: "rate track", 
-          entities: {
-              rating: {
-                  type: 'number',
-                  question: 'What is your rating for this track'
-              },
-              rating_confirmed: {
-                  type: 'enum',
-                  values: ['yes','no'],
-                  question: 'So you rate this track at {rating}'
-              }
-          }
-          //steps: ['utter ask rating','utter playback started','action beep']
-        }
     ],
     stories: [
         {
@@ -277,4 +265,26 @@ var config = {
     ]
     
 }
-module.exports = config
+
+
+// example
+
+        var message = 'play some zydeco music' //.replaceAll(' ','.')
+        console.log(['User says',message,DialogManager])
+        var d = DialogManager(config)
+        //console.log(['BOT1 d',config])
+        d.init().then(function() {
+            //d.train(config.nlp).then(function() {
+                console.log(['DD',d.toJSON()])
+                d.run(message).then(function(response) {
+                    console.log(['Bot responds',JSON.stringify(response)])  
+                })
+            //})
+        })
+      
+  </script>
+</head>
+<body>
+</body>
+</html>
+

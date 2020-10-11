@@ -1,10 +1,27 @@
-const { NlpManager } = require('node-nlp');
+const {containerBootstrap} = require('@nlpjs/core');
+const {Nlp} = require('@nlpjs/nlp');
+const {Ner} = require('@nlpjs/ner')
+const {LangEn} = require('@nlpjs/lang-en-min');
+
+//window.nlpjs = { ...core, ...nlp, ...langenmin , ...ner};
+
+//const { NlpManager } = require('node-nlp');
 var lang='en'
 
 
-function getManager(openNluData) {
-    var nlpManager = new NlpManager({ languages: [lang],forceNER: true, autoLoad: false,  autoSave: false, ner: { threshold: 1 } }); //, autoSave: false
-     
+async function NlpManager() {
+    
+    const ner = new Ner();
+    const container = await containerBootstrap();
+    container.use(Nlp);
+    container.use(LangEn);
+    const nlp = container.get('nlp');
+    nlp.settings.autoSave = false;
+    nlp.settings.autoLoad = false;
+    nlp.settings.forceNER = true;
+    nlp.addLanguage(lang);
+    
+    async function train(openNluData) {
         // collate intents
         var collatedIntents={}   
         var entitiesList={}    
@@ -27,7 +44,7 @@ function getManager(openNluData) {
                                 entitiesList[entity.type].push({'value':entity.value})
                                 // replace entity values with markers
                                 sentence = sentence.slice(0,entity.start + offset)+"%"+entity.type+"%"+sentence.slice(entity.end + offset)
-                                console.log(sentence)
+                                //console.log(sentence)
                                 var diff = (entity.end - entity.start) - (entity.type.length + 2)
                                 offset -= diff
                                 return null
@@ -40,14 +57,29 @@ function getManager(openNluData) {
           
             Object.keys(collatedIntents).map(function(key) {
                 var intent = collatedIntents[key]
-                nlpManager.addDocument(lang,key,intent)
+                //console.log(['NLP ADD DOC',key, intent]) //.replaceAll(' ','.')])
+                nlp.addDocument(lang, key, intent) //.replaceAll(' ','.'));
+                //nlpManager.addDocument(lang,key,intent)
             })
+            
+            //nlp.addDocument('en', 'goodbye for now', 'greetings.bye');
+    //nlp.addDocument('en', 'bye bye take care', 'greetings.bye');
+    //nlp.addDocument('en', 'okay see you later', 'greetings.bye');
+    //nlp.addDocument('en', 'bye for now', 'greetings.bye');
+    //nlp.addDocument('en', 'i must go', 'greetings.bye');
+    //nlp.addDocument('en', 'hello', 'greetings.hello');
+    //nlp.addDocument('en', 'hi', 'greetings.hello');
+    //nlp.addDocument('en', 'howdy', 'greetings.hello');
+    //nlp.addDocument('en', 'my %username%', 'greetings.me');
+    
+           await nlp.train() 
         }
         if (Array.isArray(openNluData.regexps)) {
             openNluData.regexps.map(function(regexp) {
                 if (regexp.entity && regexp.entity.trim()) {
                     try {
-                        nlpManager.addRegexEntity(regexp.entity, [lang], regexp.synonym)
+                        ner.addRegexRule('en',regexp.entity,regexp.synonym) //(^|[^@\w])@(\w{1,15})\b/)
+                        //nlpManager.addRegexEntity(regexp.entity, [lang], regexp.synonym)
                     } catch (e) {
                         console.log(e)
                     }
@@ -89,35 +121,77 @@ function getManager(openNluData) {
                     return null
                 })
                 Object.keys(synonymCollation).map(function(synonym) {
-                    nlpManager.addNamedEntityText(
-                        entityName,
-                        synonym,
-                        [lang],
-                        [synonym],
-                    );
-                    nlpManager.addNamedEntityText(
-                        entityName,
-                        synonym,
-                        [lang],
-                        synonymCollation[synonym],
-                    );
+                    ner.addRuleOptionTexts(lang, entityName, synonym, [synonym]);
+                    ner.addRuleOptionTexts(lang, entityName, synonym, synonymCollation[synonym]);
+                    //nlpManager.addNamedEntityText(
+                        //entityName,
+                        //synonym,
+                        //[lang],
+                        //[synonym],
+                    //);
+                    //nlpManager.addNamedEntityText(
+                        //entityName,
+                        //synonym,
+                        //[lang],
+                        //synonymCollation[synonym],
+                    //);
                 })
                 Object.keys(remainder).map(function(entityValue) {
-                    console.log(['NLP ADD ENT',entityName,entityValue])
-                    console.log()
-                    nlpManager.addNamedEntityText(
-                        entityName,
-                        entityValue,
-                        [lang],
-                        [entityValue],
-                    );
+                    //console.log(['NLP ADD ENT',entityName,entityValue])
+                    //console.log()
+                    ner.addRuleOptionTexts(lang, entityName, entityValue, [entityValue]);
+                    //nlpManager.addNamedEntityText(
+                        //entityName,
+                        //entityValue,
+                        //[lang],
+                        //[entityValue],
+                    //);
                 })
                 
                 
             }
         })
-        return nlpManager
- 
+    }
+    
+    function toJSON() {
+        return {nlp: JSON.parse(nlp.export()), core: ner.getRules()}
+    }
+    
+    async function process(utterance) {
+        //console.log(['nlp process',utterance])
+        var result = await nlp.process(lang, utterance)
+        var entities = await ner.process({ locale: lang, text: utterance});
+        //console.log(['nlp process',result,entities])
+        result.entities = entities.entities
+        return result
+    }
+    
+    return {train,process,toJSON}
 }
+    
+    //ner.addRuleOptionTexts('en', 'hero', 'spiderman', ['spiderman', 'spider-man', 'Peter Parker']);
+    //ner.addRuleOptionTexts('en', 'hero', 'batman', ['batman', 'dark knight', 'Bruce Wayne']);
+    //ner.addRuleOptionTexts('en', 'food', 'pasta', ['pasta', 'spaghetti', 'macaroni', 'raviolli']);
+    //ner.addRuleOptionTexts('en', 'food', 'fruit', ['apple', 'banana', 'macaroni', 'strawberry']);
+    //ner.addRegexRule('en','username',/(^|[^@\w])@(\w{1,15})\b/)
+    //const result = await ner.process({ locale: 'en', text: 'I saw 23 three peter prker eating an aple in New York @steve' });
+    //console.log(result);
 
-module.exports=getManager
+      
+    //////// Adds the utterances and intents for the NLP
+    //nlp.addDocument(lang, 'goodbye for now', 'greetings.bye');
+    //////await nlp.train();
+    
+    ////var sent = "my steve"
+    
+    //////const response = await nlp.process('en', sent);
+    //////console.log(response);
+    
+    //var nlpManager = new NlpManager({ languages: [lang],forceNER: true, autoLoad: false,  autoSave: false, ner: { threshold: 1 } }); //, autoSave: false
+     
+        ///
+        //return nlpManager
+ 
+//}
+
+module.exports=NlpManager

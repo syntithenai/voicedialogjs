@@ -4,11 +4,11 @@ var DialogManager = require('./dialogManager')
 var d = DialogManager(config)
 
 d.init().then(function() {
-    console.log('dm initied')
+    //console.log('dm initied')
     //d.pushIntent()
     //console.log(d.predict())
     //,entities:[{name:'name',value:'Fred'}
-    d.run('play some zydeco music @steve').then(function(response) {
+    d.run('give me something by ry cooder').then(function(response) {
         console.log(['BOT1',response,response])
         //d.run({name:'hello'}).then(function(response) {
             //console.log(['BOT2',response])
@@ -19,7 +19,7 @@ d.init().then(function() {
                 //})            
             //})
         //})  
-        console.log(d.toJSON())
+        //console.log(d.toJSON())
         
     })
 
