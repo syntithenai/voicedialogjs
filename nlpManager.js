@@ -20,8 +20,13 @@ async function NlpManager() {
     nlp.settings.autoLoad = false;
     nlp.settings.forceNER = true;
     nlp.addLanguage(lang);
+    var intentEntities={}
+        
     
     async function train(openNluData) {
+        console.log(['TRAIN NLU',openNluData])
+        // break nlp
+        // openNluData={}
         // collate intents
         var collatedIntents={}   
         var entitiesList={}    
@@ -42,6 +47,8 @@ async function NlpManager() {
                                 // save entity values from examples
                                 entitiesList[entity.type] = entitiesList[intentName] ? entitiesList[intentName] : []
                                 entitiesList[entity.type].push({'value':entity.value})
+                                intentEntities[intentName] = intentEntities[intentName] ? intentEntities[intentName] : {}
+                                intentEntities[intentName][entity.type] = 1
                                 // replace entity values with markers
                                 sentence = sentence.slice(0,entity.start + offset)+"%"+entity.type+"%"+sentence.slice(entity.end + offset)
                                 //console.log(sentence)
@@ -151,18 +158,40 @@ async function NlpManager() {
                 
             }
         })
+        //console.log(['TRAINED NLU',toJSON()])
     }
     
     function toJSON() {
-        return {nlp: JSON.parse(nlp.export()), core: ner.getRules()}
+        return {nlp: JSON.parse(nlp.export()), core: ner.getRules(), intentEntities}
     }
     
     async function process(utterance) {
         //console.log(['nlp process',utterance])
         var result = await nlp.process(lang, utterance)
+        var slots={}
+        var slotCount={}
         var entities = await ner.process({ locale: lang, text: utterance});
-        //console.log(['nlp process',result,entities])
+        // extract slots from entities using intentEntities
+        //console.log(['nlp process if',result,intentEntities,entities.entities])
+        if (result && result.intent && intentEntities.hasOwnProperty(result.intent) && intentEntities[result.intent] && Array.isArray(entities.entities)) {
+            //console.log(['nlp process if'])
+            Object.keys(intentEntities[result.intent]).map(function(entityName) {
+                //console.log(['nlp process if',entityName,entities])
+                entities.entities.map(function(entity) {
+                    //console.log(['nlp process if',entity])
+                    if (entity.entity  === entityName) {
+                        //console.log(['nlp process if match'])
+                       slotCount[entityName] = slotCount[entityName] ? parseInt(slotCount[entityName]) + 1 : 0
+                       var slotKey = entityName 
+                       if (slotCount[entityName] > 0) slotKey = entityName + '_' + slotCount[entityName]
+                       if (entity.option) slots[slotKey] = entity.option
+                    }
+                })  
+            })
+        } 
+        //console.log(['nlp process',result,entities,slots,intentEntities])
         result.entities = entities.entities
+        result.slots = slots
         return result
     }
     
