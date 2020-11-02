@@ -24,7 +24,7 @@ async function NlpManager() {
         
     
     async function train(openNluData) {
-        console.log(['TRAIN NLU',openNluData])
+        //console.log(['TRAIN NLU',openNluData])
         // break nlp
         // openNluData={}
         // collate intents

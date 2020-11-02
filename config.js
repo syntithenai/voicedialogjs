@@ -1,280 +1,227 @@
 var config = {
-    // domain
-    //slots: {
-        //name: {useValue:false}
-    //},
-    // nlu
-    nlp : { 
-        "intents": {
-            "play music": [
-              {
-                "example": "give me something by van halen",
-                "entities": [
-                  {
-                    "type": "artist",
-                    "value": "van halen",
-                    "start": 21,
-                    "end": 30
-                  }
-                ]
-              },
-              {
-                "example": "i want to hear some jazz music",
-                "entities": [
-                  {
-                    "type": "genre",
-                    "value": "jazz",
-                    "start": 20,
-                    "end": 24
-                  }
-                ]
-              },
-              {
-                "example": "i want to hear some jazz",
-                "entities": [
-                  {
-                    "type": "genre",
-                    "value": "jazz",
-                    "start": 20,
-                    "end": 24
-                  }
-                ]
-              },
-              {
-                "example": "i want to listen to reggae",
-                "entities": [
-                  {
-                    "type": "genre",
-                    "value": "reggae",
-                    "start": 20,
-                    "end": 26
-                  }
-                ]
-              },
-              {
-                "example": "i want to listen to tracks by simply red",
-                "entities": [
-                  {
-                    "type": "artist",
-                    "value": "simply red",
-                    "start": 30,
-                    "end": 40
-                  }
-                ]
-              },
-              {
-                "example": "play some blues music",
-                "entities": [
-                  {
-                    "type": "genre",
-                    "value": "blues",
-                    "start": 10,
-                    "end": 15
-                  }
-                ]
-              },
-              {
-                "example": "play some relaxing music",
-                "entities": [
-                  {
-                    "type": "genre",
-                    "value": "relaxing",
-                    "start": 10,
-                    "end": 18
-                  }
-                ]
-              },
-              {
-                "example": "play some world music by ry cooder",
-                "entities": [
-                  {
-                    "type": "genre",
-                    "value": "world",
-                    "start": 10,
-                    "end": 15
-                  },
-                  {
-                    "type": "artist",
-                    "value": "ry cooder",
-                    "start": 25,
-                    "end": 34
-                  }
-                ]
-              }
-            ],
-            "stop playing": [
-              {
-                "example": "pause",
-                "entities": []
-              },
-              {
-                "example": "stop playing",
-                "entities": []
-              }
-            ]
-      },
-      
-      
-       "entities": {
-            "artist": {
-              "values": [
-                "ry cooder",
-                "simply red",
-                "van halen"
-              ],
-              "lists": [
-                "music artists 20c"
-              ]
-            },
-            "genre": {
-              "values": [
-                "blues",
-                "jazz",
-                "reggae",
-                "relaxing",
-                "world"
-              ],
-              "lists": [
-                "music genres"
-              ]
-            }
-      },
-          
-      
-      "entitiesData": {
-                "music artists 20c": [
-                  {
-                    "value": "Wu-Tang Clan",
-                    "synonym": ""
-                  },
-                  {
-                    "value": "Amy Winehouse",
-                    "synonym": ""
-                  },
-                  {
-                    "value": "Daft Punk",
-                    "synonym": ""
-                  },
-                  {
-                    "value": "Elvis",
-                    "synonym": "Elvis Presley"
-                  }
-                  ,
-                  {
-                    "value": "The King",
-                    "synonym": "Elvis Presley"
-                  }
-                ],
-                "music genres": [
-               
-                  {
-                    "value": "zulu music",
-                    "synonym": ""
-                  },
-                  {
-                    "value": "zydeco",
-                    "synonym": ""
-                  }
-                ]
-              },
-                
-                
-        
-        "regexps": [
-            {
-              "name": "@name",
-              "synonym": /(^|[^@\w])@(\w{1,15})\b/,
-              "entity": "username"
-            }
-        ],
-        "utterances": {
-            "no_valid_api": {
-              "value": "no_valid_api",
-              "synonym": "The A P I key that you entered is not valid\n  Refer to the read me file for instructions on how to obtain one\n\n",
-              "tags": [
-                "movie master"
-              ]
-            }
-        }
+  "id": "5f7f1119c8dda585ea0bd594",
+  "invocation": "",
+  "title": "music player",
+  "entities": {
+    "artist": {
+      "values": [
+        "ry cooder",
+        "simply red",
+        "van halen"
+      ],
+      "lists": []
     },
-    actions: {
-        'action beep': function(history,slots) {
-            return new Promise(function(resolve,reject) {
-                console.log('BEEP')
-                resolve(['utter_beeped'],[{name:'age', value:'random'}])
-            })
-        }
-    },
-    utterances: {
-        'utter playback stopped': ['OK. Stopped.'],
-        'utter next track': ['Playing the next track'],
-        'utter previous track': ['Playing the previous track'],
-        'utter playback started': ['Start playing'],
-        'utter ask rating': ['What is your rating for this track'],
-        'utter playback started artist': ['Found music by {artist}'],
-        'utter playback started genre': ['Found music in the genre {genre}'],
-        'utter have_fun': ['Have a blast','Have fun','Enjoy yourself']
-    },
-    
-    // dialog flow data
-    rules: [
-        // first step must be the trigger intent
-        {
-            rule:'next_track',
-            steps:['intent next track','utter next track']
-        },
-        {
-            rule:'previous_track',
-            steps:['intent previous track', 'utter previous track']
-        },
-        {
-            rule:'stop playing',
-            steps:['intent stop playing', 'utter stop playing']
-        },
-        {
-            rule:'rate track',
-            steps:['intent rate track', 'form rate track']
-        },
-        //{
-            //rule:'play music',
-            //steps:['intent play music','utter playback started']
-        //}
+    "genre": {
+      "values": [
+        "blues",
+        "jazz",
+        "reggae",
+        "relaxing",
+        "world"
+      ],
+      "lists": []
+    }
+  },
+  "intents": {
+    "previous track": [
+      {
+        "example": "previous track"
+      }
     ],
-    forms: [
-        {
-          form: "rate track", 
-          entities: {
-              rating: {
-                  type: 'number',
-                  question: 'What is your rating for this track'
-              },
-              rating_confirmed: {
-                  type: 'enum',
-                  values: ['yes','no'],
-                  question: 'So you rate this track at {rating}'
-              }
+    "next track": [
+      {
+        "example": "skip this song"
+      },
+      {
+        "example": "skip this track"
+      },
+      {
+        "example": "next song please"
+      },
+      {
+        "example": "next track"
+      }
+    ],
+    "play music": [
+      {
+        "example": "give me something by van halen",
+        "entities": [
+          {
+            "type": "artist",
+            "value": "van halen",
+            "start": 21,
+            "end": 30
           }
-          //steps: ['utter ask rating','utter playback started','action beep']
-        }
+        ]
+      },
+      {
+        "example": "i want to hear some jazz",
+        "entities": [
+          {
+            "type": "genre",
+            "value": "jazz",
+            "start": 20,
+            "end": 24
+          }
+        ]
+      },
+      {
+        "example": "i want to listen to reggae",
+        "entities": [
+          {
+            "type": "genre",
+            "value": "reggae",
+            "start": 20,
+            "end": 26
+          }
+        ]
+      },
+      {
+        "example": "i want to listen to tracks by simply red",
+        "entities": [
+          {
+            "type": "artist",
+            "value": "simply red",
+            "start": 30,
+            "end": 40
+          }
+        ]
+      },
+      {
+        "example": "play some blues music",
+        "entities": [
+          {
+            "type": "genre",
+            "value": "blues",
+            "start": 10,
+            "end": 15
+          }
+        ]
+      },
+      {
+        "example": "play some relaxing music",
+        "entities": [
+          {
+            "type": "genre",
+            "value": "relaxing",
+            "start": 10,
+            "end": 18
+          }
+        ]
+      },
+      {
+        "example": "play some world music by ry cooder",
+        "entities": [
+          {
+            "type": "genre",
+            "value": "world",
+            "start": 10,
+            "end": 15
+          },
+          {
+            "type": "artist",
+            "value": "ry cooder",
+            "start": 25,
+            "end": 34
+          }
+        ]
+      }
     ],
-    stories: [
-        {
-          story: "play music", 
-          steps: ['intent play music','utter playback started','action beep']
-        },
-        {
-          story: "play music genre", 
-          steps: ['intent play music','slot genre','utter playback started genre','utter playback started']
-        },
-        {
-          story: "play music artist", 
-          steps: ['intent play music','slot artist','utter playback started artist','utter playback started']
-        },
-        //{
-          //story: "user says hello with name", 
-          //steps: ['intent_hello','slot_name','action_beep','utter_have_fun','utter_hello']
-        //}
+    "stop playing": [
+      {
+        "example": "pause",
+        "entities": []
+      },
+      {
+        "example": "stop playing",
+        "entities": []
+      }
     ]
-    
+  },
+  "tags": [],
+  "entitiesData": {},
+  "utterances": {
+    "previous track": {
+      "id": "5f883e269d3050e930c94252",
+      "value": "previous track",
+      "synonym": "previous track",
+      "tags": []
+    },
+    "stop playing": {
+      "id": "5f883e250bb2ec0c8309b95f",
+      "value": "stop playing",
+      "synonym": "stop playing",
+      "tags": []
+    },
+    "start playing": {
+      "id": "5f883e1a9a20dc40722ee056",
+      "value": "start playing",
+      "synonym": "start playing",
+      "tags": [],
+      "texts": [
+        {
+          "label": "",
+          "text": "dd dddd"
+        }
+      ],
+      "buttons": [
+        {
+          "label": "eek too",
+          "utterance": "",
+          "link": ""
+        }
+      ]
+    },
+    "next track": {
+      "id": "5f883d66518ed228a1ea90bd",
+      "value": "next track",
+      "synonym": "next track",
+      "tags": [],
+      "video": [
+        {
+          "label": "http://media.w3.org/2010/05/bunny/movie.mp4",
+          "href": "http://media.w3.org/2010/05/bunny/movie.mp4"
+        }
+      ]
+    }
+  },
+  "rules": [
+    {
+      "rule": "next track",
+      "steps": [
+        "intent next track",
+        "utter next track",
+        "action say date"
+      ]
+    },
+    {
+      "rule": "previous track",
+      "steps": [
+        "intent previous track",
+        "utter previous track"
+      ]
+    },
+    {
+      "rule": "stop playing",
+      "steps": [
+        "intent stop playing",
+        "utter stop playing"
+      ]
+    },
+    {
+      "rule": "play music",
+      "steps": [
+        "intent play music",
+        "utter start playing"
+      ]
+    }
+  ],
+  "actions": {
+    "say date": {
+      "value": "say date",
+      "synonym": "return [new Date().toString()]\n",
+      "id": "5f87737db0ddbc00f7eb244f"
+    }
+  }
 }
 module.exports = config
