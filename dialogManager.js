@@ -44,7 +44,7 @@ function DialogManager(config) {
      */
     function init() {
         var that = this
-        console.log(['HAN init ',that.handleBotMessage])
+        //console.log(['HAN init ',that.handleBotMessage])
         return new Promise (function(resolve,reject) {
             
             // run if available then resolve
@@ -214,7 +214,7 @@ function DialogManager(config) {
     }
     
     function fromHistory(history) {
-        console.log(['FROM HISTORY',history])
+        //console.log(['FROM HISTORY',history])
         var now = {}
         history.map(function(log) {
           now[log] = 1
@@ -260,7 +260,7 @@ function DialogManager(config) {
      */
     function replaceMarkersInUtterance(utterance,slots) {
         var newUtterance = JSON.parse(JSON.stringify(utterance))
-        console.log(['API REAPLCE MARKERS',utterance,JSON.parse(JSON.stringify(slots))])
+        //console.log(['API REAPLCE MARKERS',utterance,JSON.parse(JSON.stringify(slots))])
         if (utterance && utterance.synonym) {
             //console.log(['API REAPLCE MARKERS syn',utterance.synonym])
              Object.keys(slots).map(function(slot) {
@@ -529,9 +529,9 @@ function DialogManager(config) {
     }
     
     function slot(slot,value) {
-        console.log(['SET SLOT',slot,value,JSON.parse(JSON.stringify(slots))])
+        //console.log(['SET SLOT',slot,value,JSON.parse(JSON.stringify(slots))])
         slots[slot] = value
-        console.log(['DONE SET SLOT',slot,value,JSON.parse(JSON.stringify(slots))])
+        //console.log(['DONE SET SLOT',slot,value,JSON.parse(JSON.stringify(slots))])
     }
     
     function reset() {
@@ -543,7 +543,7 @@ function DialogManager(config) {
     function restart(slot,value) {
         history=[]
         currentForm=null
-        console.log(['restart'])
+        //console.log(['restart'])
     }
     
     function back() {
@@ -793,7 +793,7 @@ function DialogManager(config) {
                         if (form && form.finished) { 
                             //console.log(['RUNFORM complete run action',form.finished])
                             runAction(intent, form.finished,handleBotMessage).then(function(actionUtterances) {
-                                console.log(['RUNFORM complete ran action',actionUtterances])
+                                //console.log(['RUNFORM complete ran action',actionUtterances])
                                 resolve(actionUtterances)  
                             })
                         } else {
@@ -846,9 +846,9 @@ function DialogManager(config) {
                     var stepName = step.slice(7)
                     
                     if (config.actions && typeof config.actions[stepName] ) {
-                        console.log(['RUNFORM STEP complete run action',slots])
+                        //console.log(['RUNFORM STEP complete run action',slots])
                         runAction(intent, stepName, handleBotMessage).then(function(actionUtterances) {
-                            console.log(['RUNFORM STEP complete ran action',slots,actionUtterances])
+                            //console.log(['RUNFORM STEP complete ran action',slots,actionUtterances])
                                 
                             resolve(actionUtterances) //[].concat(utterances,actionUtterances))
                         });
@@ -857,7 +857,7 @@ function DialogManager(config) {
                          resolve(utterances)
                     }
                 } else if (step && step.indexOf('utter ') === 0) {
-                    console.log(['HAN run rule step UTT',step,utterances,handleBotMessage,slots])
+                    //console.log(['HAN run rule step UTT',step,utterances,handleBotMessage,slots])
                     var stepName = step.slice(6)
                     if (utterancesAll && utterancesAll[stepName]) {
                         history.push(step)
