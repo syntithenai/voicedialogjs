@@ -11,7 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "@nlpjs/basic": "^4.13.3",
-    "node-nlp": "^4.13.3"
+    "axios": "^0.21.0",
+    "node-nlp": "^4.13.3",
+    "youtube-api-search": "0.0.5"
   },
   "devDependencies": {
     "browserify": "^16.5.2",

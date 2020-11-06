@@ -3,6 +3,7 @@
 
 // ensure window available for nodejs
 var window = window ? window : {}
+var gapi = gapi ? gapi : null
 window.gapi = gapi
 //console.log('API WIN DSS',window,gapi)
 const { NeuralNetwork } = require('@nlpjs/neural');

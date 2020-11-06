@@ -166,21 +166,21 @@ async function NlpManager() {
     }
     
     async function process(utterance) {
-        //console.log(['nlp process',utterance])
+        console.log(['nlp process',utterance])
         var result = await nlp.process(lang, utterance)
         var slots={}
         var slotCount={}
         var entities = await ner.process({ locale: lang, text: utterance});
         // extract slots from entities using intentEntities
-        //console.log(['nlp process if',result,intentEntities,entities.entities])
+        console.log(['nlp process if',result,intentEntities,entities.entities])
         if (result && result.intent && intentEntities.hasOwnProperty(result.intent) && intentEntities[result.intent] && Array.isArray(entities.entities)) {
-            //console.log(['nlp process if'])
+            console.log(['nlp process if'])
             Object.keys(intentEntities[result.intent]).map(function(entityName) {
-                //console.log(['nlp process if',entityName,entities])
+                console.log(['nlp process if',entityName,entities])
                 entities.entities.map(function(entity) {
-                    //console.log(['nlp process if',entity])
+                    console.log(['nlp process if',entity])
                     if (entity.entity  === entityName) {
-                        //console.log(['nlp process if match'])
+                    console.log(['nlp process if match'])
                        slotCount[entityName] = slotCount[entityName] ? parseInt(slotCount[entityName]) + 1 : 0
                        var slotKey = entityName 
                        if (slotCount[entityName] > 0) slotKey = entityName + '_' + slotCount[entityName]
@@ -189,7 +189,7 @@ async function NlpManager() {
                 })  
             })
         } 
-        //console.log(['nlp process',result,entities,slots,intentEntities])
+        console.log(['nlp process',result,entities,slots,intentEntities])
         result.entities = entities.entities
         result.slots = slots
         return result
