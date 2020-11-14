@@ -85,7 +85,11 @@ async function NlpManager() {
             openNluData.regexps.map(function(regexp) {
                 if (regexp.entity && regexp.entity.trim()) {
                     try {
-                        ner.addRegexRule('en',regexp.entity,regexp.synonym) //(^|[^@\w])@(\w{1,15})\b/)
+                        //  /\b(\w[-._\w]*\w@\w[-._\w]*\w\.\w{2,3})\b/gi
+                        console.log(["ADD REGEXP",,regexp.entity])
+                        var newRegexp = new RegExp(regexp.synonym)
+                        console.log(["ADD REGEXP created",newRegexp])
+                        //ner.addRegexRule('en',regexp.entity, newRegexp) //(^|[^@\w])@(\w{1,15})\b/)
                         //nlpManager.addRegexEntity(regexp.entity, [lang], regexp.synonym)
                     } catch (e) {
                         console.log(e)
