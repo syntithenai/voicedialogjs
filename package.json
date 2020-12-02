@@ -10,9 +10,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@nlpjs/basic": "^4.13.3",
+    "@nlpjs/builtin-compromise": "file:../mynlpjs/nlp.js/packages/builtin-compromise",
+    "@nlpjs/core": "file:../mynlpjs/nlp.js/packages/core",
+    "@nlpjs/lang-en-min": "file:../mynlpjs/nlp.js/packages/lang-en-min",
+    "@nlpjs/neural": "file:../mynlpjs/nlp.js/packages/neural",
+    "@nlpjs/nlp": "file:../mynlpjs/nlp.js/packages/nlp",
+    "@nlpjs/ner": "file:../mynlpjs/nlp.js/packages/ner",
     "axios": "^0.21.0",
-    "node-nlp": "^4.13.3",
+    "compromise": "^13.7.0",
+    "compromise-dates": "^1.2.0",
+    "compromise-numbers": "^1.0.0",
+    "js-chess-engine": "^0.5.1",
+    "words-to-numbers": "^1.5.1",
     "youtube-api-search": "0.0.5"
   },
   "devDependencies": {
